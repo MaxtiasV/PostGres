@@ -1,0 +1,89 @@
+/*
+ * 1. En una nueva base de datos llamada unidad2-oracle, debemos cargar el archivo
+unidad2-oracle.sql.
+ */
+ /*se cargan los datos desde archivos csv creados con la info otorgada*/
+CREATE TABLE cliente (
+    id integer NOT NULL,
+    nombre character varying(50) NOT NULL,
+    email character varying(40) NOT null,
+   primary key (id)
+    );
+
+CREATE TABLE compra (
+    id integer NOT NULL,
+    cliente_id integer NOT NULL,
+    fecha date,
+    primary key(id),
+    foreign key(cliente_id) references cliente(id)
+);
+
+CREATE TABLE producto (
+    id integer NOT NULL,
+    descripcion character varying(500) NOT NULL,
+    stock integer,
+    precio integer,
+    CONSTRAINT stock_valido CHECK ((stock >= 0)),
+    primary key (id)
+);
+
+CREATE TABLE detalle_compra (
+    id integer NOT NULL,
+    producto_id integer NOT NULL,
+    compra_id integer NOT NULL,
+    cantidad integer,
+    primary key (id),
+    foreign key (producto_id) references producto(id),
+    foreign key (compra_id) references compra(id)
+);
+
+select * from cliente;
+select * from compra;
+select * from detalle_compra;
+select * from producto;
+/*
+2. El cliente usuario01 ha realizado la siguiente compra:
+● Producto: producto9.
+● Cantidad: 5.
+● Fecha: fecha del sistema.
+Utiliza lo que aprendiste sobre transacciones para almacenar los hechos que ocurrieron en
+este punto. Luego, comprueba los resultados mediante otra consulta, enfocando nuestra
+atención en el valor del stock, es decir, podremos ver si fue efectivamente descontado.
+
+*/
+
+begin;
+	insert into compra (id, cliente_id, fecha) values (33, 1, current_date);
+	select * from compra where id=33;
+	insert into detalle_compra (id, producto_id, compra_id, cantidad) values (43, 9, 33, 5);
+	select * from detalle_compra where id=43;
+	update producto set stock = stock-5 where id=9;
+	select * from producto where id=9;
+commit;
+/*la compra no se lleva a cabo, se anula todo el proceso*/
+
+/*3. El cliente usuario02 ha realizado la siguiente compra:
+● Producto: producto1, producto2, producto8.
+● Cantidad: 3 de cada producto.
+● Fecha: fecha del sistema.
+Mediante el uso de transacciones, realiza las consultas correspondientes para este
+requerimiento y luego consulta la tabla producto para validar que si alguno de ellos se queda
+sin stock, no se realice la compra.
+*/
+
+begin;
+	insert into compra (id, cliente_id, fecha) values (33, 2, current_date);
+	select * from compra where id=33;
+	insert into detalle_compra (id, producto_id, compra_id, cantidad) values (43, 1, 33, 3);
+	insert into detalle_compra (id, producto_id, compra_id, cantidad) values (44, 2, 33, 3);
+	insert into detalle_compra (id, producto_id, compra_id, cantidad) values (45, 8, 33, 3);
+	select * from detalle_compra where id=43;
+	select * from detalle_compra where id=44;
+	select * from detalle_compra where id=45;
+	update producto set stock = stock-3 where id=1;
+	update producto set stock = stock-3 where id=2;
+	update producto set stock = stock-3 where id=8;
+	select * from producto where id=1;
+	select * from producto where id=2;
+	select * from producto where id=8;
+commit;
